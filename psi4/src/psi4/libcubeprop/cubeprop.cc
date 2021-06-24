@@ -41,6 +41,7 @@
 #include "cubeprop.h"
 #include "csg.h"
 
+#include <regex>
 #include <tuple>
 
 #ifdef _OPENMP
@@ -134,15 +135,38 @@ void CubeProperties::raw_compute_properties() {
                     indsb0.push_back(ind);
                 }
             } else {
-                for (size_t ind = 0; ind < options_["CUBEPROP_ORBITALS"].size(); ind++) {
-                    int val = options_["CUBEPROP_ORBITALS"][ind].to_integer();
-                    if (val > 0) {
-                        indsa0.push_back(std::abs(val) - 1);
+                auto n_blocks = options_["CUBEPROP_ORBITALS"].size();
+                std::regex re("(-?[0-9]+)\\D*(-?[0-9]*)");
+
+                for (size_t n = 0; n < n_blocks; ++n) {
+                    std::smatch sm;
+                    std::string str(options_["CUBEPROP_ORBITALS"][n].to_string());
+                    std::regex_match(str, sm, re);
+                    if (sm.size() == 3) {
+                        auto start = std::stoi(sm[1]);
+                        auto end = sm[2].length() ? std::stoi(sm[2]) : start;
+                        if (start * end <= 0) {
+                            throw PSIEXCEPTION("Invalid range of CUBEPROP_ORBITALS. Index starts from 1!");
+                        }
+                        if (start > 0) {
+                            auto min = start < end ? start : end;
+                            auto max = start < end ? end : start ;
+                            for (auto i = min - 1; i < max; ++i) {
+                                indsa0.push_back(i);
+                            }
+                        } else {
+                            auto min = start < end ? -end : -start;
+                            auto max = start < end ? -start : -end;
+                            for (auto i = min - 1; i < max; ++i) {
+                                indsb0.push_back(i);
+                            }
+                        }
                     } else {
-                        indsb0.push_back(std::abs(val) - 1);
+                        throw PSIEXCEPTION("Invalid expression of CUBEPROP_ORBITALS.");
                     }
                 }
             }
+
             std::vector<std::string> labelsa;
             std::vector<std::string> labelsb;
             CharacterTable ct = basisset_->molecule()->point_group()->char_table();
