@@ -3,7 +3,7 @@
  *
  * Psi4: an open-source quantum chemistry software package
  *
- * Copyright (c) 2007-2024 The Psi4 Developers.
+ * Copyright (c) 2007-2026 The Psi4 Developers.
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -571,6 +571,7 @@ void Wavefunction::common_init() {
             } else if (perturb_with == "DX") {
                 dipole_field_type_ = dx;
             } else if (perturb_with == "SPHERE") {
+                outfile->Printf("  WARNING: Option PERTURB_WITH=SPHERE is deprecated and may be removed as soon as v1.13.\n");
                 dipole_field_type_ = sphere;
             } else {
                 outfile->Printf("Unknown PERTURB_WITH. Applying no perturbation.\n");
@@ -1362,13 +1363,6 @@ std::map<std::string, double> Wavefunction::scalar_variables() { return variable
 std::map<std::string, SharedMatrix> Wavefunction::array_variables() { return arrays_; }
 
 std::map<std::string, std::shared_ptr<ExternalPotential>> Wavefunction::potential_variables() { return potentials_; }
-
-double Wavefunction::get_variable(const std::string &key) { return scalar_variable(key); }
-SharedMatrix Wavefunction::get_array(const std::string &key) { return array_variable(key); }
-void Wavefunction::set_variable(const std::string &key, double val) { return set_scalar_variable(key, val); }
-void Wavefunction::set_array(const std::string &key, SharedMatrix val) { set_array_variable(key, val); }
-std::map<std::string, double> Wavefunction::variables() { return scalar_variables(); }
-std::map<std::string, SharedMatrix> Wavefunction::arrays() { return array_variables(); }
 
 void Wavefunction::set_PCM(const std::shared_ptr<PCM> &pcm) {
     PCM_ = pcm;
